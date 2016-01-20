@@ -95,3 +95,18 @@ summary(sim)
 
 
 
+### ------------ Exercise ------------------------------------------------------
+
+# In this exercise we will use benthic community data around offshore installations. 
+# The data was retrieved from the UK Benthos Database, Oil & Gas UK, 
+# http://www.oilandgasuk.co.uk/knowledgecentre/uk_benthos_database.cfm.
+
+# Benthic communities were sampled at sites with varying distances from an oil platform 
+# along transects. 
+# Moreover, several environmental parameters have been measured at the sampling sites.
+# However for this exercise we only need the distance column of the table.
+
+# We are interested if communities near the oil platform differ from communities apart.
+
+
+
