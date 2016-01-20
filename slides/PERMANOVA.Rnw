@@ -217,8 +217,9 @@ legend("bottomleft", pch = 16, col = c('red', 'green'), legend = c('upstream', '
   \end{column}
   \pause
   \begin{column}{5cm}
-  $F-ratio = \frac{SS_{group}}{SS_{residual}} \cdot \frac{df_{residual}}{df_{group}}$\\[0.5em]
-  \small $SS_{total} = SS_{residual} + SS_{group}$
+    \small $SS_{total} = SS_{residual} + SS_{group}$\\[0.5em]
+  $F-ratio = \frac{SS_{group}}{SS_{residual}} \cdot \frac{df_{residual}}{df_{group}}$
+
   \visible<3->{
 <<F-distr, fig.height=4, echo=FALSE>>=
   # F-Distribution
@@ -386,6 +387,12 @@ text(1.1, 400, 'permuted F values', adj = 0, col = 'steelblue')
 }
   \end{column}
 \end{columns}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Permutations (II)}
+\includegraphics[width = \textwidth]{figs/perm2.pdf}
 \end{frame}
 
 \section{Assumptions}
