@@ -1,12 +1,12 @@
-"site";"position"
-"Breitungen";"Breitungen";"upstream"
-"Unterrohn";"Unterrohn";"upstream"
-"Tiefenort";"Tiefenort";"upstream"
-"Merkers";"Merkers";"upstream"
-"Dorndorf";"Dorndorf";"upstream"
-"Letzter Heller";"Letzter Heller";"downstream"
-"Gerstungen";"Gerstungen";"downstream"
-"Blickershausen";"Blickershausen";"downstream"
-"Unterrieden";"Unterrieden";"downstream"
-"Buchenau";"Buchenau";"downstream"
-"Treffurt";"Treffurt";"downstream"
+site,position,
+Breitungen,Breitungen,upstream
+Unterrohn,Unterrohn,upstream
+Tiefenort,Tiefenort,upstream
+Merkers,Merkers,upstream
+Dorndorf,Dorndorf,upstream
+Letzter Heller,Letzter Heller,downstream
+Gerstungen,Gerstungen,downstream
+Blickershausen,Blickershausen,downstream
+Unterrieden,Unterrieden,downstream
+Buchenau,Buchenau,downstream
+Treffurt,Treffurt,downstream
