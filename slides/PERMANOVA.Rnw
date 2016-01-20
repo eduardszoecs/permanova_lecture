@@ -1,0 +1,470 @@
+\pdfminorversion 4
+%% otherwise pdftk does not run properly...
+\documentclass[10pt]{beamer}
+\usetheme{PaloAlto}
+\usecolortheme{beaver}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}  
+\usepackage[scaled=1]{helvet} 
+\usepackage{fancyvrb}
+\usepackage{fixltx2e}
+\usepackage{amsmath}
+\graphicspath{{pics/}}                  % path to graphics
+\beamertemplatenavigationsymbolsempty
+\setbeamercovered{transparent}% Allow for shaded (transparent) covered items
+
+
+
+%% Custumizations of theme
+% Bold font in titles
+\setbeamerfont{frametitle}{series=\bfseries} 
+\setbeamerfont{block title}{series=\bfseries}
+
+\setbeamercolor{section in sidebar}{fg=black}
+\setbeamercolor{title in sidebar}{fg=black}
+
+\setbeamertemplate{itemize items}[default]
+\setbeamercolor*{item}{fg=darkred} % all frames will have red bullets
+
+\renewcommand{\footnotesize}{\scriptsize}
+
+
+% customize color code chunk (Scode = inline)
+\definecolor{Sinput}{rgb}{0.75,0.19,0.19}
+\definecolor{Soutput}{rgb}{0,0,0}
+\definecolor{Scode}{rgb}{0.75,0.19,0.19}
+
+
+\title{PERMANOVA}
+\author{Eduard Szöcs}
+\institute{Institute for Environmental Sciences - University Koblenz-Landau}
+\date{\today}
+\logo{\includegraphics[width = 1.5cm]{logo.pdf}}  
+
+
+
+
+
+\begin{document}
+% default size for the sweaved graphics
+%\setkeys{Gin}{width=1\textwidth}
+% default font size and color for R code
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{formatcom = {\color{Sinput}},fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{formatcom = {\color{Soutput}},fontsize=\footnotesize}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{formatcom = {\color{Scode}},fontsize=\small}
+
+%%% Setup structure and load data and pacakges
+<<setup, results='hide', echo=FALSE>>=
+options(width=60)
+opts_chunk$set(fig.path='figs/',
+               fig.align='center',
+               fig.show='hold',
+               size='footnotesize', 
+               cache=TRUE)
+@
+
+
+<<load, results='hide',echo=FALSE, message=FALSE>>=
+# data
+datadir <- '/home/edisz/Documents/Uni/Courses/WS1314/Multivariate_statistics/PERMANOVA/data'
+werra_sp <- read.table(file.path(datadir, 'werra_sp.csv'), sep = ';')
+werra_env <- read.table(file.path(datadir, 'werra_env.csv'), sep = ';')
+
+# packages 
+require(vegan)
+require(MASS)
+@
+
+%%% Begin slides
+%% Title Page
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\section{Introduction}
+\begin{frame}
+  \frametitle{Introduction}
+  \begin{itemize}
+    \item Assumptions of MANOVA:
+    \begin{itemize}
+      \item Independence of the sample units 
+      \item Multivariate normality 
+      \item Homogeneity of variance–covariance matrices 
+    \end{itemize} 
+    \item Euclidean distance useful? \pause
+    \item Generally \textbf{not} met for ecological data sets!
+    \item Need a robust method to handle complex data sets.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Permutational Multivariate Analysis of Variance Using Distance Matrices}
+  \includegraphics[width = \textwidth]{both.jpg}
+  \pause
+  \begin{itemize}
+    \item Very influential paper in community ecology
+    \begin{itemize}
+      \item Google Scholar: >4500 citations
+    \end{itemize}
+    \pause
+    \item Non-parametric approach combined with ecological distance measures!
+  \end{itemize}
+\end{frame}
+
+\subsection{Data}
+\begin{frame}
+  \frametitle{Data set used in this lecture}
+  Macroinvertebrate data from the River Werra\footnotemark \footnotetext{Bäthe, Jürgen, and Eckhard Coring. Biological Effects of Anthropogenic Salt-load on the Aquatic Fauna: A Synthesis of 17 Years of Biological Survey on the Rivers Werra and Weser. Limnologica - Ecology and Management of Inland Waters 41(2): 125-133.}
+
+  \textcolor{darkred}{Aim :} Effect of anthropogenic salinisation on macroinvertebrate communities 
+
+  \begin{columns}
+  \begin{column}{5cm}
+    \begin{itemize}
+      \item upstream - downstream design
+      \item salt brine discharge around Vacha
+      \item Do the communities differ between up- and downstream?
+      \item Not the original data (proprietary).
+    \end{itemize}
+  \end{column}
+  \begin{column}{5cm}
+      \includegraphics[height=0.7\textheight]{pics/map.pdf}
+      \footnotemark
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{First impression of the data}
+\begin{itemize}
+  \item NMDS Bray-Curtis-Distance and x\textsuperscript{0.25} transformation. 
+\end{itemize}
+  \includegraphics[width=.9\linewidth]{dt.png}
+  \footnote{Anderson MJ, Crist TO, Chase JM, Vellend M, Inouye BD, Freestone AL, et al. Navigating the multiple meanings of beta diversity: a roadmap for the practicing ecologist. Ecology Letters. 2011;14(1):19–28. }
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{First impression of the data - NMDS}
+\begin{itemize}
+  \item NMDS Bray-Curtis-Distance and x\textsuperscript{0.25} transformation. 
+\end{itemize}
+
+ \begin{columns}
+  \begin{column}{5cm}
+    \begin{itemize}
+    \item upstream and downstream sites clearly separate in NMDS.
+    \item Spread looks similar.
+    \item Indication of a difference between upstream and downstream.
+    \end{itemize}
+  \end{column}
+  \begin{column}{5cm}
+<<nmds2_plot, fig.height=6, fig.width=6, message=FALSE, results='hide', warning=FALSE, out.width='5cm', out.height='5cm', echo=FALSE>>=
+dist_werra_sp <- vegdist(werra_sp, 'bray')
+nmds <- metaMDS(dist_werra_sp, k = 2)
+# empty plot
+op <- ordiplot(nmds, type = 'n', xlim = c(-0.6, 0.6))
+# points
+cols = c('red', 'green')
+points(nmds, cex = 2, pch = 16, col = cols[werra_env$position])
+# decoration
+ordispider(nmds, groups = werra_env$position, label = TRUE)
+legend("bottomleft", pch = 16, col = c('red', 'green'), legend = c('upstream', 'downstream'))
+@
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Maths}
+\begin{frame}[fragile]
+  \frametitle{Recap: ANOVA}
+  \textcolor{darkred}{Question :} How is univariate ANOVA calculated?
+  \begin{block}{From univariate...}
+  \begin{columns}
+  \begin{column}{5cm}
+<<permanova1, echo=FALSE>>=
+  ### data generation
+  ngroup <- 10   # no. of sample per group
+  set.seed(1234)
+  adf <- data.frame(group = factor(c(rep(c(1,2,3), each = ngroup))), 
+                    y = c(rnorm(ngroup, 10,3), rnorm(ngroup,12,3), rnorm(ngroup,14,3)))  # generate normal distributed grouped data
+  ### plotting
+  plot(adf$y, type = "n", ylab = "y")   # empty plot
+  groups <- levels(adf$group)  # extract groups
+  order <- 1:nrow(adf)      # position of points along x-axis
+  groupn <- numeric(length(groups))  # number of groups
+  cols <- c("steelblue", "darkred", "darkgreen")   # color to take
+  grandmean <- mean(adf$y)   # copute overall mean
+  abline(h = grandmean, lwd = 5, lty = 2)   # draw overall mean
+  for(i in seq_along(groups)){
+    points(order[adf$group == i], adf$y[adf$group == i], col = cols[i], cex = 1.5, pch = 16)
+    groupn[i] <- mean(adf$y[adf$group == i])
+    lines(c(min(order[adf$group == i]), max(order[adf$group == i])), y = rep(groupn[i], 2), col = cols[i], lwd = 10)
+    lines(rep(mean(order[adf$group == i]), 2), c(groupn[i], grandmean), col = cols[i], lty = "dotted", lwd = 5)
+    for(j in 1:ngroup){
+      lines(c((10*i)-10+j ,(10*i)-10+j), c(groupn[i], adf$y[(10*i)-10+j]),col = cols[i])
+    }
+  }   # complex for loop....
+  legend("bottomright", 
+         legend = c("Group 1", "Group 2", "Group3", "Group Means", "Overall Mean"), 
+         col = c("steelblue", "darkred", "darkgreen", "Black", "Black"), 
+         pch = c(16,16,16,NA, NA), 
+         lty = c(NA, NA, NA, "solid", "dashed"),
+         cex = 1.5)
+
+@
+  \end{column}
+  \pause
+  \begin{column}{5cm}
+  $F-ratio = \frac{SS_{group}}{SS_{residual}} \cdot \frac{df_{residual}}{df_{group}}$\\[0.5em]
+  \small $SS_{total} = SS_{residual} + SS_{group}$
+  \visible<3->{
+<<F-distr, fig.height=4, echo=FALSE>>=
+  # F-Distribution
+  F <- data.frame(summary(aov(y ~ group, adf))[[1]])[1,4]
+  x <- seq(0, 7, 0.01)
+  y <- df(x, 27 , 2)
+  plot(x, y, type = "l", main = "F-distribution", bty = "n")
+  abline(v = F, lty = "dotted")
+  x_choord <- c(F, x[x >= F], 7)
+  y_choord <- c(0, y[x >= F], 0)
+  polygon(x_choord, y_choord, col = "steelblue")
+@
+  }
+  \end{column}
+  \end{columns}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Distance-based MANOVA}
+Distance-based MANOVA is analogous!
+  \begin{block}{... to multivariate ANOVA}
+  \begin{columns}
+  \begin{column}{5cm}
+<<permanova2, echo=FALSE, message=FALSE, warning=FALSE>>=
+    # data generation
+    require(MASS)
+    require(vegan)
+    ## Generate grouped multivariate normal data
+    # g : number of groups
+    # n : samples
+    # d : dimensions
+    # m : mean of 1st group
+    # v : spread of 1st group
+    # dv : multiplicative factor of difference in spread between the groups
+    # dm : multiplicative factor of difference in mean between the groups
+    grouped.mvrnorm <- function(g = 2, n = 100, d = 2, m = 0, v = 1, dv = 0, dm = 0){
+      biout <- mvrnorm(n = n, rep(m, d), diag(v, d, d))
+      for(i in 2:g){
+        bix <- mvrnorm(n = n, rep(m + (i - 1) * dm, d), diag(v + (i - 1) * dv, d, d))
+        biout <- rbind(biout, bix)
+      }
+      out <- data.frame(group = factor(rep(1:g, each = n)), biout)
+      return(out)
+    }
+    
+    set.seed(0190)
+    df <- grouped.mvrnorm(g = 3, n = 10, d = 2, dm = 3)  
+    ### plot the data
+    # plot the data, in a bivariate case this is easy, but what when we have more dimension?
+    # colors to use
+    cols <- c("steelblue", "darkred", "darkgreen")
+    # empty plot
+    op <- ordiplot(df[ ,-1], type = "n", xlab = "Variable 1", ylab = "Variable 2", cex.lab = 2)  
+    # add points, with color depending on factor
+    points(df[, -1], col = cols[df$group], pch = 16, cex = 2)  
+    # add 'spider'
+    os <- ordispider(op, df$group, label = TRUE, cex = 1.5)
+    # compute and add overall centroid
+    ovamean <- colMeans(df[ ,-1])
+    points(x = ovamean[1], y = ovamean[2], pch = 17, cex = 2.5) 
+    # add between group distance
+    lines(x = c(os[1, 1], ovamean[1]), y = c(os[1, 2], ovamean[2]), lty = 2) 
+    lines(x = c(os[11, 1], ovamean[1]), y = c(os[11, 2], ovamean[2]), lty = 2) 
+    lines(x = c(os[21, 1], ovamean[1]), y = c(os[21, 2], ovamean[2]), lty = 2) 
+    # add legend
+    legend("bottomright",    
+           legend = c("Group 1", "Group 2", "Group3", "Group Centroids", "Overall Centroid"), 
+           col = c("steelblue", "darkred", "darkgreen", "Black", "Black"),   
+           pch = c(16,16,16,0,17),   # point style
+           cex = 1.5)     # "zoom"
+@
+      \end{column}
+      \begin{column}{5cm}
+      \begin{itemize}
+      \item Partitioning into variance components:\\
+            $SS_{total} = SS_{group} + SS_{residual}$
+      \item \textbf{centroids}
+      \item p-value by \textbf{permutations}
+      \end{itemize}
+      \end{column}
+  \end{columns}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Variance Partitioning}
+  \begin{itemize}
+  \item We can use any \textbf{Distance Matrix} to partition the variance.
+  \pause
+  \item \textcolor{blue}{Sum of squared distances from individual points to their centroid} is equal to the \textcolor{red}{sum of squared interpoint distances divided by the number of points}.
+   
+  \item $\textcolor{blue}{\sum d_{i-centroid}^2} = \textcolor{red}{\frac{1}{N}\sum d_{i-j}^2}$
+  \end{itemize}
+  \begin{centering}
+  \includegraphics[height=0.5\textheight]{pics/Anderson_2001_ip.pdf}
+  \end{centering}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Variance Partitioning}
+  Like in univariate ANOVA variance can be partitioned:
+  \begin{columns}
+  \begin{column}{5cm}
+    \includegraphics<1->[height=0.4\textheight]{pics/Anderson_2001_SST.pdf}\\
+    \visible<2->{
+    \includegraphics[height=0.4\textheight]{pics/Anderson_2001_SSG.pdf}
+    }
+  \end{column}
+  \begin{column}{5cm}
+  $SS_{total} = \frac{1}{N} \sum\limits_{i=1}^{N-1} \sum\limits_{j=i+1}^{N} d_{ij}^2$ \\
+  \tiny N = total number of observations \\[2em] \normalsize \pause
+  $SS_{residual} = \frac{1}{n} \sum\limits_{i=1}^{N-1} \sum\limits_{j=i+1}^{N} d_{ij}^2 \epsilon_{ij}$\\
+  \tiny n = number of observations per group \\ 
+  $\epsilon_{ij} = 
+  \begin{cases}
+    1,& \text{if }  \text{if observations i and j are in the same group}\\
+    0,& \text{otherwise}
+  \end{cases}$ \\[2em] \normalsize \pause
+  
+  $SS_{group} = SS_{total} - SS_{residual}$ \\[2em] \pause
+  $(Pseudo-) F = \frac{SS_{group}}{SS_{residual}} \frac{N-a}{a-1}$\\
+  
+  \tiny a = no. groups\\[1em]
+  \footnotesize
+  p-value is assessed via permutations.
+  \end{column}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{p-values using permutations}
+\begin{columns}
+  \begin{column}{5cm}
+    \begin{itemize}
+    \item Cannot use Fisher's F-ratio
+      \begin{itemize}
+        \item normal distribution?
+        \item euclidean distance?
+      \end{itemize} \vspace{1.5em} 
+      \pause
+      \item Instead use \textbf{permutations}
+      \begin{itemize}
+        \item shuffle data randomly
+        \item compute F-Ratio ($F_{perm}$)
+        \item repeat many times
+      \end{itemize}\vspace{1.5em}
+      \item compare  \textcolor{blue}{F of randomized data} with \textcolor{red}{original F}.\\[1.5em]
+      \item $p = \frac{\text{No. of }F_{perm}~\ge~F}{\text{No. of permutations + 1}}$
+    \end{itemize}
+  \end{column}
+  \begin{column}{5cm}
+  \visible<2->{
+<<permplot, echo = FALSE, fig.height=5>>=
+ad <- adonis(werra_sp ~ werra_env$position, method='bray')
+fperm <- ad$f.perms
+obs <- ad$aov.tab$F.Model[1]
+hist(fperm, col = 'steelblue',main='Histogramm of permuted F values', xlab = 'F')
+abline(v=obs, col = 'red', lwd = 4)
+text(3, 400, 'original F', adj = 0, col = 'red')
+text(1.1, 400, 'permuted F values', adj = 0, col = 'steelblue')
+@
+}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Assumptions}
+\begin{frame}[fragile]
+  \frametitle{Assumptions of PERMANOVA}
+\begin{columns}
+  \begin{column}{5cm}
+    \begin{itemize}
+      \item equal \textbf{dispersions}
+      \item Visual inspection
+      \item Multivariate analogue to Levene's test available.\footnotemark
+    \end{itemize}
+    \pause
+    \begin{itemize}
+    \item Multivariate Dispersion
+      \begin{itemize}
+      \item $\beta$-diversity
+      \item functional diversity
+      \item see literature folder
+      \end{itemize}
+    \end{itemize}
+
+  \end{column}
+  \begin{column}{5cm}
+<<nmds2_plot2, fig.height=6, fig.width=6, message=FALSE, results='hide', warning=FALSE, out.width='5cm', out.height='5cm', echo=FALSE>>=
+dist_werra_sp <- vegdist(werra_sp, 'bray')
+nmds <- metaMDS(dist_werra_sp, k = 2)
+# empty plot
+op <- ordiplot(nmds, type = 'n', xlim = c(-0.6, 0.6))
+# points
+cols = c('red', 'green')
+points(nmds, cex = 2, pch = 16, col = cols[werra_env$position])
+# decoration
+ordispider(nmds, groups = werra_env$position, label = TRUE)
+ordihull(nmds, groups =  werra_env$position, lty = 'dotted')
+legend("bottomleft", pch = 16, col = c('red', 'green'), legend = c('upstream', 'downstream'))
+@
+    \end{column}
+  \end{columns}
+  \footnotetext{Anderson, M. J. 2006. Distance Based Tests for Homogeneity of Multivariate Dispersions. Biometrics 62 (1): 245-253.}
+\end{frame}
+
+% \section{SIMPER}
+% \begin{frame}
+% \frametitle{SIMPER - Which species are discriminating between the groups?}
+% \begin{itemize}
+%   \item Bray Curtis dissimilarity between two sites can be written as:
+%   $$d_{ij} = \frac{\sum\limits_{k=1}^n |x_{jk} - x_{ik}|}{\sum\limits_{k=1}^n (x_{jk}+x_{ik})}$$
+%   \pause
+%   \item nominator is the sum of individual species (k) differences therefore the single contribution of species k is:
+%   $$d_{ijk} = \frac{|x_{jk} - x_{ik}|}{\sum\limits_{k=1}^n (x_{jk}+x_{ik})}$$
+%   \item averaged between groups
+% \end{itemize}
+% 
+% \footnotetext{Clarke, K. R. 1993. Non-parametric Multivariate Analyses of Changes in Community Structure. Austral Ecology 18 (1): 117-143.}
+% \end{frame}
+
+
+\section{Summary}
+\begin{frame}
+\frametitle{Summary}
+PERMANOVA is a
+  \begin{itemize}
+    \item flexible (any distance measure) and
+    \item easy (analogue to univariate Anova)
+  \end{itemize}
+tool for ecologists. \\[2em]
+
+\pause
+However,
+  \begin{itemize}
+    \item non-parametric does no mean assumption free.
+  \end{itemize}
+\end{frame}
+
+\section{How to}
+\begin{frame}
+\frametitle{Lets do it in R!}
+\includegraphics[width=\textwidth]{pics/user.png}
+\end{frame}
+
+\end{document}
