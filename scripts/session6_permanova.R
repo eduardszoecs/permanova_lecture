@@ -3,9 +3,10 @@
 require(vegan)
 
 # This downloads the data files directly from the web
-werra_sp <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_sp.csv', sep = ';', 
-                       header = TRUE, row.names = 1)
-werra_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_env.csv', sep = ';')
+werra_sp <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_sp.csv', 
+                       sep = ',', header = TRUE, row.names = 1)
+werra_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_env.csv', 
+                        sep = ',')
 
 #! Note: If this does not work (probably because of https...), open the urls in your browser,
 #! download them ('Save page as') and read in the downloaded csv
@@ -109,4 +110,30 @@ summary(sim)
 # We are interested if communities near the oil platform differ from communities apart.
 
 
+# Task 1 - Read the data into R
+oil_abu <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/oil_abu.csv', 
+                      sep = ',', header = TRUE)
+oil_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/oil_env.csv', 
+                      sep = ',')
 
+
+# Task 2 - Group the sampling sites into three distance classes (0-250m, 251-750m, >750m). 
+# Use the variable 'distance' in the oil_env table and 
+# the cut() function to classify the distance classes.
+# Add this new variable to the oil_env data.frame.
+
+# Task 3 - The abundance data (oil_abu) consists of counts. 
+# What distance measure may be appropriate for this kind of data?
+
+# Task 4 - Run a NMDS on the community data using an appropriate distance measure. 
+# Plot the results of the NMDS. 
+# Display only sites and use different colors for the distance classes.
+
+# Task 5 - Perform a PERMANOVA to test whether communities near the oil platform 
+# differ from communities further apart.
+# How much of the variance in the community data could be explained by the distance class?
+
+# Task - 6 The PERMOVA might show that there is statistically significant difference 
+# between different distance classes.
+#  However, can we trust these results? 
+# Perform a distance-based test for homogeneity of dispersion using betadisper.
