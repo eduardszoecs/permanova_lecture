@@ -1,8 +1,0 @@
-\beamer@endinputifotherversion {3.24pt}
-\select@language {english}
-\beamer@sectionintoc {1}{Introduction}{2}{0}{1}
-\beamer@subsectionintoc {1}{1}{Data}{7}{0}{1}
-\beamer@sectionintoc {2}{Maths}{10}{0}{2}
-\beamer@sectionintoc {3}{Assumptions}{22}{0}{3}
-\beamer@sectionintoc {4}{Summary}{24}{0}{4}
-\beamer@sectionintoc {5}{How to}{26}{0}{5}
