@@ -1,0 +1,250 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[top=2cm, bottom=1.5cm, left=2cm, right=2cm]{geometry}
+\usepackage{listings}
+\usepackage[authoryear]{natbib}
+\usepackage{fixltx2e}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{hyperref}
+
+\setlength\parindent{0pt}
+
+
+\title{Multivariate Statistics: Exercise 3}
+\author{Eduard Szöcs (\url{szoecs@uni-landau.de})}
+
+
+\begin{document}
+<<echo=FALSE>>=
+  options(width=80)
+
+#   listing <- function(x, options) {
+#     paste("\\begin{lstlisting}[basicstyle=\\ttfamily,breaklines=true]\n",
+#       x, "\\end{lstlisting}\n", sep = "")
+#   }
+#   knit_hooks$set(source=listing, output=listing)
+#   opts_chunk$set(background = '#dedede')
+
+@
+\maketitle
+
+\section{Part I - Principal component analysis}
+
+In this exercise we will analyse a dataset from Australia collected by R. Schäfer and colleagues \citep{schafer_effects_2012}. The focus of this study was to analyse the effects of pesticide toxicity and salinisation on macroinvertebrate communities \citep{szocs_is_2012}.
+
+Macroinvertebrates, pesticides and other environmental variables were sampled at 24 sites situated in a 120km radius around Melbourne on three sampling occasions. These sites covered a gradient of both, pesticide exposure and salinisation. Pesticide toxicity was expressed in terms of Toxic Units (TU) with respect to \emph{Daphnia magna} and salinity in terms of electrical conductivity ($\mu S /cm$ at 25°C).
+
+You can find the data in the \emph{data} folder of this exercise. There are two data files:
+\begin{description}
+  \item[envdata.csv] 22 measured environmental variables at the sites. Some of the variables have already been transformed. See Table \ref{tab:env} for details.
+  \item[abudata.csv] Counts of 75 taxa collected during the study - mostly on family level.
+\end{description}
+
+The first three columns are the same in both files: \texttt{Site}, \texttt{Month} and \texttt{Site\_Month} are ID variables - they code uniquely each sample. These should not be included in your analysis, but are useful to join both tables.
+
+\begin{table}[h]
+  \centering
+  \caption{Overview of environmental variables.}
+  \vspace{0.5em}
+  \begin{tabular}{llcl}
+  \hline
+  Column & Variable & \multicolumn{1}{l}{Unit} & Transformation\\ 
+  \hline
+  \texttt{T} & Temperature & °C & - \\ 
+  \texttt{pH} & pH & - & - \\ 
+  \texttt{oxygen} & Dissolved oxygen & \% sat. & - \\ 
+  \texttt{Depth} & stream depth & m & - \\ 
+  \texttt{max\_width} & maximum stream width & m & - \\ 
+  \texttt{min\_width} & minimum stream width & m & - \\ 
+  \texttt{rif\_prec} & Pool & \% & - \\ 
+  \texttt{pool\_perc} & Riffle & \% & - \\ 
+  \texttt{Bedrock} & Bedrock & \% & - \\ 
+  \texttt{Boulder} & Boulder (\textgreater 25.6 cm) & \% & - \\ 
+  \texttt{Cobble} & Cobble (6.4 - 26.5 cm) & \% & - \\ 
+  \texttt{Pebble} & Pebble (1.6 - 6.4 cm) & \% & - \\ 
+  \texttt{Gravel} & Gravel (0.2 - 1.6 cm) & \%  & - \\ 
+  \texttt{Sand} & Sand (0.06 - 0.2 cm) & \% & - \\ 
+  \texttt{Clay.silt} & Clay (\textless 0.06 cm) & \% & - \\ 
+  \texttt{log\_Cond} & Conductivity & uS / cm & log10 \\ 
+  \texttt{log\_Nh4} & Ammonia & mg / L & log10 \\ 
+  \texttt{log\_NO2} & Nitrite & mg / L & log10 \\ 
+  \texttt{log\_NO3} & Nitrate & mg / L & log10 \\ 
+  \texttt{log\_PO4} & Phosphate & mg / L & log10 \\ 
+  \texttt{log\_Turb} & Turbidity & NTU & log10 \\ 
+  \texttt{log\_maxTU} & Maximum TU & TU \textsubscript{D.manga} & log10 \\ \hline
+  \end{tabular}
+  \label{tab:env}
+\end{table}
+
+
+\subsection{Tasks}
+<<echo = FALSE>>=
+setwd('/home/edisz/Documents/Uni/Courses/WS1415/Multivariate_Statistics/Exercises/Exercise_3/data/')
+envdata <- read.table('envdata.csv', header = TRUE)
+abudata <- read.table('abudata.csv', header = TRUE)
+@
+
+\begin{description}
+  \item[q1\_1]{Read both data files into R and name them according to their file name!
+Check that all variables (except the three ID variables) are either numeric or integer.
+  }
+  
+\end{description}
+The first step of an analysis is to get an impression about the data (or the conditions at the sampling sites), the relationships between variables and the main gradients in the data set.
+
+Since we know that there is a gradient of salinity and pesticide exposure (due to experimental design), we are interested which other gradients may be present in the data set.
+\begin{description}
+  \item[q1\_2]{If you run  a PCA on a data set with 20 variables: how many axes will the resulting PCA have? Give your answer as integer.
+      <<eval=FALSE>>=
+e.g. 2
+@
+  }
+  
+  \item[q1\_3]{Conduct a PCA on the environmental data set, excluding the variables \texttt{log\_Cond} and \texttt{log\_maxTU}. Note, that we are interested in the correlation between variables. Therefore, we set \texttt{scale = TRUE} to scale the variables (they are measured on different scales!) which gives us correlations.
+
+   Create a temporary data.frame, excluding the ID variables, \texttt{log\_Cond} and \texttt{log\_maxTU}. Run a PCA on this temporary data.frame.
+
+<<echo=FALSE, message=FALSE>>=
+require(vegan)
+tmp <- envdata[ , -c(1:3, 25, 19)]
+q1_3 <- rda(tmp, scale = TRUE)
+@
+  }
+
+  
+  \item[q1\_5 ]{Create a correlation biplot of the PCA from \textbf{q1\_3}!   
+  }
+  
+  \item[q1\_6]{Figure 1 shows a correlation biplot of the environmental variables.
+<<q1_6, echo=FALSE, fig.show='hold', out.width='10cm', fig.align='center', fig.cap='Correlation biplot of environmental variables', fig.pos='H'>>=
+biplot(q1_3, scaling = 2)
+@ 
+Which of the following statements is correct?
+\begin{enumerate}
+  \item Temperature (\texttt{T}) and \texttt{pH} are correlated.
+  \item \texttt{Clay.silt} and \texttt{log\_Turb} are negatively correlated.
+  \item The proportion of riffles (\texttt{rif\_perc}) and pools (\texttt{pool\_perc}) are negatively correlated.
+  \item \texttt{Clay.silt} and Temperature (\texttt{T}) are not correlated.
+  \item Sand and Gravel are not correlated.
+\end{enumerate}
+One or more statements are correct. 
+ }
+
+
+\item[q1\_7]{Figure 1 shows a correlation biplot of the environmental variables.
+Which of the following statements is correct?
+\begin{enumerate}
+  \item The first axis could be interpreted as a gradient in hydrological conditions.
+  \item The first and second axis are not correlated.
+  \item The second axis is a gradient of chemical conditions.
+  \item \texttt{Clay.silt} is the most important variable for the first axis.
+\end{enumerate}
+One or more statements are correct. G
+}
+
+\item[q1\_8]{What proportion of variance can be explained by the first two axis? 
+Give your answer in percent (0.39 = 39\%) and round to one digit!
+<<eval=FALSE>>=
+e.g. 38.1
+@
+
+}
+\end{description}
+
+
+\section{Part II - PCA regression}
+We are interested which variables drive the diversity of macroinvertebrates. Our main hypotheses are that salinity and pesticide toxicity may affect diversity. Nevertheless, also other variables may have an impact on diversity.
+
+The data set is very small and consists of only 69 observations \footnotemark \footnotetext{which additionally may not be independent (temporal autocorrelation), but we will ignore this at the moment.}. Therefore, we cannot fit a model containing all variables (Note, that you should have at least 10 observations per variable).
+
+One way to deal with this issue, is to reduce the dataset into fewer variables. If PCA-axes describe interpretable gradients, we could use the axes as surrogates for the variables that load on these. PCA axis are orthogonal to each other and therefore, we also have no issue with collinearity.
+
+\vspace{1em}
+
+\subsection{Tasks}
+
+\begin{description}
+  \item[q2\_1]{First need to quantify macroinvertebrate diversity in our samples. There are many possibilities - an easy measure is the number of species, but there are also other diversity indices.
+  Use the \texttt{diversity()} function from the vegan packages to compute the Shannon diversity of the samples.
+<<echo=FALSE, message=FALSE>>=
+q2_1 <- diversity(abudata[ , -c(1:3)])
+@
+
+@
+  }
+Don't forget to exclude the ID variables, before computing diversity!
+  
+  \item[q2\_2]{Using the broken stick criterion - how many axes would you extract from the PCA from \textbf{q1\_3}? Give your answer as integer.
+  <<eval=FALSE>>=
+q2_2 <- 7
+@  
+  }
+  
+  \item[q2\_3]{Extract the site scores of the first two axes (You should use scaling = 1, as we are interested in the relationship between samples). These will be used as predictors in the next step.
+  <<echo=FALSE, message=FALSE>>=
+q2_3 <- scores(q1_3, display = 'sites', choices=1:2, scaling = 1)
+@
+
+}
+
+  \item[q2\_4]{Create a new data.frame with the columns "shannon" (=shannon diversity from q2\_1), "PC1" (=sites scores on first axis (from q2\_3)), "PC2" (site scores on second axis), \texttt{"log\_Cond"} (from envdata) and \texttt{"log\_maxTU"} (from envdata).
+  
+  Your data.frame should have exactly this structure:
+  
+<<echo=FALSE>>=
+q2_4 <- data.frame(shannon = q2_1, q2_3, log_Cond = envdata$log_Cond, log_maxTU = envdata$log_maxTU)
+str(q2_4)
+@
+  }
+
+  \item[q2\_5]{Build a linear model explaining shannon diversity with conductivity (\texttt{log\_Cond}), salinity (\texttt{log\_maxTU}), as well as the two extracted PCA axes. Use the formula interface together with the data.frame from \textbf{q2\_4}. Use the order \texttt{log\_Cond}, \texttt{log\_maxTU}, PC1, PC2 in your formula.
+  }
+<<echo=FALSE>>=
+q2_5 <- lm(shannon ~ log_Cond + log_maxTU + PC1 + PC2, data = q2_4)
+@
+
+  \item[2\_6]{Figure 2 shows the residuals vs. fitted values of the model from q2\_5.
+<<q2_6, echo=FALSE, fig.show='hold', out.width='8cm', fig.align='center', fig.cap='Residuals vs. fitted values of the model from q2\\_5.', fig.pos='H'>>=
+plot(q2_5, which = 1)
+@  
+  Is the assumption of constant variances met? (yes = TRUE, no = FALSE)
+<<eval = FALSE>>=
+TRUE or FALSE
+@
+}
+
+  \item[2\_7]{Below is the summary-output of this model.
+<<echo=FALSE>>=
+summary(q2_5)
+@
+
+Can the hypothesis that pesticides decrease macroinvertebrate diversity confirmed? (TRUE = yes, FALSE = no)
+<<eval=FALSE>>=
+TRUE or FALSE
+@
+  }
+  
+  \item[2\_8]{Which of the following statements is correct?
+  \begin{enumerate}
+    \item \texttt{Clay.silt} has a positive impact on diversity.
+    \item The model explains only 13.7\% of the variance in the data.
+    \item Increasing conductivity decreases diversity.
+    \item There are 64 degrees of freedom, because there are 64 data points.
+    \item Hydrology influences diversity.
+  \end{enumerate}
+  One or more statements are correct. 
+  }
+
+\end{description}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
