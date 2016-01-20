@@ -1,0 +1,229 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[top=2cm, bottom=1.5cm, left=2cm, right=2cm]{geometry}
+\usepackage{listings}
+
+\setlength\parindent{0pt}
+
+
+\title{Multivariate Statistics: Exercise 1}
+\author{Eduard Szöcs (\url{szoecs@uni-landau.de}) \\
+\footnotesize If you have problems/questions contact me via email.}
+
+
+\begin{document}
+<<echo=FALSE>>=
+  options(width=80)
+
+#   listing <- function(x, options) {
+#     paste("\\begin{lstlisting}[basicstyle=\\ttfamily,breaklines=true]\n",
+#       x, "\\end{lstlisting}\n", sep = "")
+#   }
+#   knit_hooks$set(source=listing, output=listing)
+#   opts_chunk$set(background = '#dedede')
+
+@
+\maketitle
+
+\section{Part I - Data exploration and linear model.}
+1) Find, download and read the publication
+
+\vspace{1em}
+Zuur, A.F, E.N Ieno, and C.S Elphick. 2010. “A Protocol for Data Exploration to Avoid Common Statistical Problems.” Methods in Ecology and Evolution 1 (1): 3–14.
+\vspace{1em}
+
+
+
+2) Answer the following questions:
+
+
+\begin{description}
+  \item[q1\_1]{Outliers should always be removed from the dataset.
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+  }
+  \item[q1\_2]{Homogeneity of variance can be checked using residuals.
+      <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+  \item[q1\_3]{Collinearity is the existence of correlation between covariates.
+      <<eval=FALSE>>=
+TRUE or FALSE
+@
+  }
+  \item[q1\_4]{Figure 1 below shows fitted vs. residuals of a model. Are there any problematic patterns?
+      <<eval=FALSE>>=
+TRUE or FALSE
+@
+
+<<q1_4, echo=FALSE, out.width='8cm', fig.align='center', fig.cap='Residuals vs. fitted values of a model'>>=
+set.seed(122)
+n <- 100
+x <- runif(n)
+y <- rnorm(n , 5*x, 1.5*x)
+mod <- lm(y ~ x)
+plot(mod, which = 1)
+@
+  }
+  
+\item[q1\_5]{Figure 2 summarises the residuals of a model. Do you see any problematic patterns?
+      <<eval=FALSE>>=
+TRUE or FALSE
+@
+
+<<q1_5, echo=FALSE, fig.show='hold', out.width='8cm', fig.align='center', fig.cap='QQ-Plot and histogram of residuals of a model'>>=
+set.seed(122)
+n <- 100
+x <- runif(n)
+y <- rnorm(n , 5*x, 1)
+mod <- lm(y ~ x)
+plot(mod, which = 2)
+hist(residuals(mod))
+@
+}
+\end{description}
+
+
+
+
+
+\section{Part II - Applied linear model.}
+The red squirrel (\emph{Sciurus vulgaris}) is an endangered species in Scotland. 
+To setup a conservation plan, it is important to know the effect of forest composition on red squirrel abundance.
+
+In this exercise we will use data of 
+
+\vspace{1em}
+Flaherty, S., Patenaude, G., Close, A., Lurz, P. W. W. (2012). The impact of forest stand structure  on red squirrel habitat use. Forestry, 85(3), 437–444. doi:10.1093/forestry/cps042
+\vspace{1em}
+
+
+Some informations about the study:
+52 forest plots were setup and the number of trees, tree height, diameter of trees at breast height (DBH) and canopy cover in these plots was recorded. 
+Feeding remains of cones were counted and serve as an index for red squirrel abundance.
+\vspace{1em}
+One research question was:
+
+\emph{What habitat variables (no. trees, diameter and height of trees, canopy cover) influence squirrel abundance (an measured by the number of stripped cones observed)?}
+
+\vspace{1em}
+You can find the data in the \emph{data} folder of this exercise (\texttt{RedSquirrels.txt}).
+\vspace{1em}
+
+
+
+\begin{description}
+  \item[q2\_1]{
+  Read the file \texttt{RedSquirrels.txt} into R.
+
+<<echo=FALSE>>=
+q2_1 <- read.table('file:///home/edisz/Documents/Uni/Courses/WS1415/Multivariate_Statistics/Exercises/Exercise_1/data/RedSquirrels.txt', header = TRUE)
+@
+You will need additional arguments. Have a look at the raw data file using a text editor and set them accordingly.
+Your table should look like:
+<<echo=FALSE>>=
+str(q2_1)
+@
+}
+
+  \item[q2\_2]{
+  Inspect the two variables \texttt{SqCones} (the number of stripped Cones) and \texttt{DBH} (diameter of trees at breast height). Use the methods described in Zuur (2010).
+  Are there any outliers?
+  <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+
+  \item[q2\_3]{Build a linear regression model, explaining \texttt{SqCones} with \texttt{DBH}.}
+
+
+    \item[q2\_4]{Shows the model normal distributed residuals?.
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+
+    \item[q2\_5]{Figure 3 shows a plot of residuals vs. fitted values of the fitted model. Is the assumption of variance homogeneity met?
+  
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+<<q2_5, fig.show='hold', out.width='8cm', fig.align='center',echo = FALSE, fig.cap='Residual vs. fitted values of the red squirrel model.'>>=
+setwd('/home/edisz/Documents/Uni/Courses/WS1415/Multivariate_Statistics/Exercises/Exercise_1/data/')
+q2_1 <- read.table('RedSquirrels.txt', header = TRUE)
+q2_3 <- lm(SqCones ~ DBH, data = q2_1)
+q2_3_res <- residuals(q2_3)
+q2_3_fit <- fitted(q2_3)
+plot(q2_3_res ~ q2_3_fit, xlab = 'Fitted', ylab = 'Residuals')
+abline(h = 0, lty = 'dotted')
+@
+
+    \item[q2\_6]{Are there any influential points?
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+
+    \item[q2\_7]{Is this a 'good' model (good = model fits the data)?
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+
+    \item[q2\_8]{Rerun the analysis, but omit the influential point!
+    Does this results into a 'good' model?
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+
+\end{description}
+
+
+
+
+
+
+\section{Part III - Reading data into R!}
+You find four different data-files in the \emph{data} folder (\texttt{iris1.csv}, \texttt{iris2.csv}, ...). 
+These contain all the same data, but stored in different formats and with some quirks.  \\[1em]
+
+
+1) Read these files into R using the \texttt{read.table()} function and store them in objects named according to the filenames.
+
+
+All of these need some additional arguments for the function \texttt{read.table()}, to be read in correctly. 
+The whole exercise should be answered using the \texttt{read.table()} function. Do not use wrappers like \texttt{read.csv()} or \texttt{read.delim()} - \texttt{read.table()} is a universal tool.
+Consult the help (\texttt{?read.table}) for possible arguments, their function and usage. \\ [1em]
+Look at the text-files in an \textbf{editor} to check what arguments are needed (column separator, decimal separator, NA-values etc).
+
+\textbf{Do not make any changes to the raw files!} These would be not be reproducible by others. It's a good practice in science to keep raw data files unchanged. \\[1em]
+
+Use \texttt{str()} to check whether the tables are read correctly. 
+Especially check \\ (i) the number of columns,\\ (ii) the number of rows,\\ (iii) the data types of columns,\\ (iv) NA values. \\[1em]
+
+The output of \texttt{str()} should look like:
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## 'data.frame':  150 obs. of  5 variables:
+##  $ Sepal.Length: num  5.1 4.9 4.7 4.6 5 5.4 4.6 5 4.4 4.9 ...
+##  $ Sepal.Width : num  3.5 3 3.2 NA 3.6 3.9 3.4 3.4 2.9 3.1 ...
+##  $ Petal.Length: num  1.4 1.4 1.3 1.5 1.4 1.7 1.4 1.5 1.4 1.5 ...
+##  $ Petal.Width : num  0.2 0.2 0.2 0.2 0.2 0.4 0.3 0.2 0.2 0.1 ...
+##  $ Species     : Factor w/ 3 levels "setosa","versicolor",..: 1 1 1 1 1 1 1 1 ..
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\end{document}
