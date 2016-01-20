@@ -1,0 +1,288 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[top=2cm, bottom=1.5cm, left=2cm, right=2cm]{geometry}
+\usepackage{listings}
+\usepackage[authoryear]{natbib}
+\usepackage{float}
+
+\setlength\parindent{0pt}
+
+
+\title{Multivariate Statistics: Exercise 2}
+\author{Eduard Szöcs (\url{szoecs@uni-landau.de})}
+
+\begin{document}
+<<echo=FALSE>>=
+  options(width = 80)
+
+#   listing <- function(x, options) {
+#     paste("\\begin{lstlisting}[basicstyle=\\ttfamily,breaklines=true]\n",
+#       x, "\\end{lstlisting}\n", sep = "")
+#   }
+#   knit_hooks$set(source=listing, output=listing)
+#   opts_chunk$set(background = '#dedede')
+
+@
+\maketitle
+
+\section{Part I - Generalized Linear Model}
+The number of cones stripped by squirrels (\texttt{SqCones}) is a surrogate for squirrel abundance and we want to study the effects of tree diameter (\texttt{DBH}) on habitat selection of squirrels. For more information please refer to the original publication (Flaherty et al. 2012) or the solution to exercise 1.
+
+In Exercise 1.2 we saw that a Gaussian distribution may not be appropriate to model the relationship between stripped cones and tree diameter - mainly because of left skewed residuals (no negative values). As we have count data a Poisson GLM might better fit to this data.
+
+\vspace{1em}
+You can find the data in the \emph{data} folder of this exercise (\texttt{RedSquirrels.txt}). It is the same data as in exercise 1, please do not modidy the raw data file!
+\vspace{1em}
+
+
+1) Read the data into R. 
+
+<<echo = FALSE>>=
+setwd('/home/edisz/Documents/Uni/Courses/WS1415/Multivariate_Statistics/Exercises/Exercise_2/data/')
+rsq_data <- read.table('RedSquirrels.txt', header = TRUE)
+q1_1 <- glm(SqCones ~ DBH, data = rsq_data, family = poisson)
+@
+
+
+2) Answer the following questions!
+\begin{description}
+  \item[q1\_1]{Fit a Poisson GLM to \texttt{SqCones} explained by \texttt{DBH}. Use the formula interface and the \texttt{data} argument!
+  }
+  
+  \item[q1\_2]{Figure 1 shows the residuals vs. fitted values, is there any conspicuous pattern in this plot?
+    <<eval=FALSE>>=
+TRUE or FALSE
+@
+}
+  \item[q1\_3]{
+  What is the maximum value of cook's distance for this model? Please give a numeric answer, round to two digits, e.g.
+  <<eval = FALSE>>=
+25.35
+@
+
+You can use the \texttt{?round} function to round to two digits.
+}
+
+  \item[q1\_4]{Are there any issues with overdispersion with this model?
+     <<eval=FALSE>>=
+TRUE or FALSE
+@ 
+  }
+  
+  \item[q1\_5]{
+  Which of the following model equations is correct?
+  \begin{enumerate}
+    \item $SqCones = 2.331 + 1.972 * DBH$
+    \item $SqCones = e^{2.331 + 1.972 * DBH}$
+    \item $SqCones = 2.331 + e^{1.972 * DBH}$
+  \end{enumerate}
+  Give your result as single digit number!
+       <<eval=FALSE>>=
+1 or 2 or 3
+@ 
+  }
+  \item[q1\_6]{
+  Plot raw data and the model predictions into one plot!
+  }
+\end{description}
+
+
+%% -----------------------------------------------------------------------------
+\section{Part II - Generalized Linear Model - More then one predictor}
+Although a Poisson might not the best choice here, we’ll stick with the Poisson model and add some more predictors to the model.
+
+\begin{description}
+\item[q2\_1]{ Explore the relationships between the four predictor variables (Ntrees, DBH, TreeHeight, CanopyCover) graphically.
+
+Create a matrix of scatterplots using the \texttt{pairs()} function. The plots above the diagonal should be scatterplots with an added smoother. The diagonal should contain histogram of the distribution of the variables. The plot below the diagonal should print the correlation between variables. (Hint: All you need can be found in the help of \texttt{?pairs}).
+
+<<echo=FALSE, results='hide'>>=
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+# pairs(rsq_data[ , -1], lower.panel = panel.cor, diag.panel = panel.hist, upper.panel = panel.smooth)
+@
+}
+\item[q2\_2]{ What is the biggest absolute (pearson) correlation between the four predictor variables? Round to two digits, e.g.
+<<eval = FALSE>>=
+0.15
+@
+
+<<echo=FALSE, results='hide'>>=
+cor(rsq_data[ ,-c(1,2)])
+@
+}
+
+\item[q2\_3]{Fit a possion model predicting SqCones with the four variables Ntrees, DBH, TreeHeight and CanopyCover (the predictors should enter in this order in the model). Use the formula interface and the \texttt{data} argument! Use the \texttt{rsq\_data} data.frame.
+
+<<results='hide', echo=FALSE>>=
+q2_3 <- glm(SqCones ~ Ntrees + DBH + TreeHeight + CanopyCover, data = rsq_data, family = poisson)
+@
+}
+
+\item[q2\_4]{ Figure 2 shows the fitted vs. residuals of this model.
+<<q2_4, echo=FALSE, fig.show='hold', out.width='8cm', fig.align='center', fig.cap='Residual vs. fitted values of the red squirrel poisson glm.', fig.pos='H'>>=
+plot(q2_3, which = 1)
+@
+Is there anything conspicuous on this plot?
+<<eval = FALSE>>=
+<TRUE or FALSE>
+@
+}
+
+\item[q2\_5]{ Are there problems with collinearity in this model? (judge by VIFs)? (TRUE = Yes, FALSE = NO)
+<<eval = FALSE>>=
+<TRUE or FALSE>
+@
+<<echo=FALSE, results='hide', message=FALSE>>=
+require(car)
+vif(q2_3)
+@
+}
+
+\item[q2\_6]{
+  Which of the following model equations is correct?
+  \begin{enumerate}
+    \item $SqCones = -5.501 + 0.003 * DBH + 2.485 * DBH + 0.037 * Treeheight + 0.072 * CanopyCover$
+    \item $SqCones = -5.501 - e^{0.003 * DBH + 2.485 * DBH + 0.037 * Treeheight + 0.072 * CanopyCover}$
+    \item $SqCones = e^{-5.501 + 0.003 * DBH + 2.485 * DBH + 0.037 * Treeheight + 0.072 * CanopyCover}$
+    \item none of the above
+  \end{enumerate}
+    Give your result as single digit number!
+<<eval=FALSE>>=
+1 or 2 or 3 or 4
+@ 
+}
+
+\item[q2\_7]{Which of the variables is most important for the red squirrels?
+
+Regression coefficients in linear models are usually not directly comparable, because the estimates depend on the variances and these usually differ between input variables (e.g. DHB is measure in meters and ranges from 0.1 to 0.8 - CanopyCover is measured in \% and ranges from 50\% to 100\%) \citep{schielzeth_simple_2010} (you'll find the publication in the data folder - \textbf{read it!}). 
+A simple approach is to scale input variables to zero mean and unit variance.
+
+\vspace{1em}
+Scale the four predictors to zero mean and unit variance and store them in a new data.frame. The new data.frame should have the same structure as the unscaled one.
+<<echo=FALSE>>=
+q2_7 <- data.frame(rsq_data[ ,1:2], 
+                   scale(rsq_data[ , -c(1,2)]))
+@
+}
+
+\item[q2\_8]{
+Refit the model from q2\_3 using the scaled predictors! Which variable is most important?
+  \begin{enumerate}
+    \item Ntrees
+    \item DBH
+    \item Treeheight
+    \item CanopyCover
+  \end{enumerate}
+  
+    Give your result as single digit number!
+<<eval=FALSE>>=
+1 or 2 or 3 or 4
+@ 
+}
+
+\end{description}
+
+
+
+\section{Part III - Generalized Linear Model - Dealing with overdispersion}
+The Poisson GLM in part I showed strong overdispersion. Perhaps you checked also the model from part II: overdispersion is also present there.
+
+One possibility to deal with overdispersion mentioned in the lecture is using quasi-likelihood estimation. 
+However, another possibility is to use the negative-binomial distribution. The negative binomial distribution is more flexible due to an additional dispersion parameter and can be fitted using a true likelihood (quasipoisson is based on a quasi-likelihood, therefore an AIC cannot be calculated).
+Negative binomial GLM fits in many cases good to overdispersed count data.
+
+\begin{description}
+
+  \item[q3\_1]{
+  Fit the model from q2\_3 using quasipoisson. Use the formula interface and the \texttt{data} argument! Use the \texttt{rsq\_data} data.frame.
+  <<echo=FALSE, message=FALSE, results='hide', warning=FALSE>>=
+q3_1 <-  glm(SqCones ~ Ntrees + DBH + TreeHeight + CanopyCover, data = rsq_data, family = quasipoisson)
+require(MASS)
+q3_3 <-  glm.nb(SqCones ~ Ntrees + DBH + TreeHeight + CanopyCover, data = rsq_data)
+summary(q2_3)
+summary(q3_1)
+summary(q3_3)
+@ 
+  }
+  
+  \item[q3\_2]{Compare the summaries of the models q2\_3 and q3\_1, which statement is correct?
+  \begin{enumerate}
+    \item Parameter estimates, AIC and Standard Errors are the same
+    \item Parameter estimates are the same,  AIC and Standard Errors differ
+    \item AIC and Standard Errors are the same, Parameter estimates differ
+    \item Parameter estimates, AIC and Standard Errors differ
+  \end{enumerate}
+  <<eval=FALSE>>=
+1 or 2 or 3 or 4
+@ 
+  }
+  
+  \item[q3\_3]{
+  Fit the model from q2\_3 using a negative-binomial distribution. (\texttt{glm.nb()} from the MASS package. Note, you do not need to specify the family argument in this case!).
+  Use the formula interface and the \texttt{data} argument! Use the \texttt{rsq\_data} data.frame.
+  }
+  
+  \item[q3\_4]{Compare the summaries of the models q2\_3 and q3\_3, which statement is correct?
+  \begin{enumerate}
+    \item Parameter estimates, AIC and Standard Errors are the same
+    \item Parameter estimates are the same,  AIC and Standard Errors differ
+    \item AIC and Standard Errors are the same, Parameter estimates differ
+    \item Parameter estimates, AIC and Standard Errors differ
+  \end{enumerate}
+  <<eval=FALSE>>=
+1 or 2 or 3 or 4
+@ 
+  }
+  
+\item[q3\_5]{The negative binomial model from q3\_3 seems to fit good to the data (have you checked the model visually?).
+Refit the model from q3\_3 using the scaled predictors! Which variable is most important?
+  \begin{enumerate}
+    \item Ntrees
+    \item DBH
+    \item Treeheight
+    \item CanopyCover
+  \end{enumerate}
+  
+    Give your result as single digit number!
+<<echo=FALSE>>=
+q3_5 <-  glm.nb(SqCones ~ Ntrees + DBH + TreeHeight + CanopyCover, data = q2_7)
+@
+<<eval=FALSE>>=
+1 or 2 or 3 or 4
+@ 
+}
+
+\item[q3\_6]{Plot data and model! For easiness and representaion (2 dimensional space) use \textbf{only CanopyCover (unscaled)} as predictor!
+Your plot should include: raw data, model predictions, a 95\% interval. A bonus would be the model equation.)
+This has not been covered in the lecture! Please use a internet search-machine of your choice and try to solve the task!
+}
+\end{description}
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
