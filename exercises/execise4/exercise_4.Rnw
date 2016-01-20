@@ -1,0 +1,287 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[top=2cm, bottom=1.5cm, left=2cm, right=2cm]{geometry}
+\usepackage{listings}
+\usepackage[authoryear]{natbib}
+\usepackage{fixltx2e}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{hyperref}
+
+\setlength\parindent{0pt}
+
+
+\title{Multivariate Statistics: Exercise 4}
+\author{Eduard Szöcs (\url{szoecs@uni-landau.de})}
+
+
+\begin{document}
+<<echo=FALSE>>=
+  options(width=80)
+
+#   listing <- function(x, options) {
+#     paste("\\begin{lstlisting}[basicstyle=\\ttfamily,breaklines=true]\n",
+#       x, "\\end{lstlisting}\n", sep = "")
+#   }
+#   knit_hooks$set(source=listing, output=listing)
+#   opts_chunk$set(background = '#dedede')
+
+@
+\maketitle
+
+\section{Part I - Constrained Ordination}
+
+
+This exercise is a follow up to exercise 3. 
+
+Condensing all the community data into one number (like the Shannon index) comes along with loss of information, but simplicity.
+However, we have abundance data at hand and we should use this in the most efficient way.
+
+In this exercise we'll look how community composition changes with salinity and pesticide load.
+
+"RDA is an extremely powerful tool in the hand of ecologists [...]" \cite{borcard_numerical_2011}. Unfortunately RDA should not directly be used with abundance data because of the double-zero problem (euclidean distance) and non-linear responses along long gradients.
+
+Legendre and Gallagher (2001) \cite{legendre_ecologically_2001} solved this problem : "[..] especially since the introduction of the Legendre and Gallagher (2001) transformations that open RDA to the analysis of community composition data tables (transformation-based RDA or tb-RDA)."
+
+This exercise is about transformation-based RDA (tbRDA) and its application to the Australia data.
+
+
+\subsection{Tasks}
+<<echo = FALSE, message=FALSE>>=
+setwd('/home/edisz/Documents/Uni/Courses/WS1415/Multivariate_Statistics/Exercises/Exercise_3/data/')
+require(vegan)
+envdata <- read.table('envdata.csv', header = TRUE)
+abudata <- read.table('abudata.csv', header = TRUE)
+@
+
+\begin{description}
+  \item[q1\_1]{Read both data files (abudata and envdata) into R.
+  }
+  
+  \item[q1\_2]{Transform the abundance data using a Hellinger transformation!
+<<echo=FALSE>>=
+q1_2 <- decostand(abudata[ , -c(1:3)], method = 'hellinger')
+@
+
+Do not forget to exclude the three ID columns.
+  }
+  
+  \item[q1\_3]{Fit a RDA model to this hellinger tranformed data. 
+
+  Use conductivity (\texttt{log\_Cond}), pesticide load (\texttt{log\_maxTU}), as well as the first two PCA axes from exercise 3 as predictors!
+  
+  Here is the code to get you started:
+
+  We run a PCA on the environmental data, extract the site scores and create a new data.frame with the predictor variables:
+<<>>=
+# PCA from exercise 3
+PCA <- rda(envdata[ , -c(1:3, 25, 19)], scale = TRUE)
+# extract site scores
+sc <- scores(PCA, scaling = 1, display = 'sites')
+# create new predictor data.frame
+pred_data <- data.frame(log_Cond = envdata$log_Cond, log_maxTU = envdata$log_maxTU, sc)
+str(pred_data)
+@
+
+  Now compute with this the RDA!
+<<echo=FALSE>>=
+q1_3 <- rda(q1_2 ~ ., data = pred_data)
+@
+ 
+}
+  
+  \item[q1\_4]{ Create a triplot of the resulting PCA. Use a symmetric scaling (scaling = 3).
+  } 
+  
+  \item[q1\_5]{ Figure 1 shows the resulting triplot.
+<<q1_5, echo=FALSE,fig.show='hold', out.width='9cm', fig.align='center', fig.cap='Triplot of the Australia data', fig.pos='H'>>=
+plot(q1_3, scaling = 3)
+@
+
+Describing the plot, which of the following statements is correct?
+\begin{enumerate}
+  \item Conductivity and PC1 are the two most influential predictors.
+  \item Lymnaeidea are mainly found at sites with high electrical conductivity.
+  \item The abundance of Simulidae is affected by hydrology.
+  \item The sample in row 64 has higher salinity then the sample in row 22.
+  \item Physidae can tolerate a relatively high amount of toxicity.
+\end{enumerate}
+One or more statements are correct. 
+  } 
+  
+  \item[1\_6]{What proportion of total variance can be explained by the predictor variables? 
+Give your answer in percent and round to integer (0.3916 = 39\%)!
+<<eval=FALSE>>=
+e.g. 39
+@
+}
+
+  \item[1\_7]{What proportion of (total) variance that can be explained by the predictors is displayed on the first axis?
+Give your answer in percent and round to integer (0.3916 = 39\%)!
+<<eval=FALSE>>=
+e.g. 39
+@
+}
+
+  \item[1\_8]{ Perform a permutational significance test of the RDA axes.
+  Which axes displays a significant amount of variation?
+\begin{enumerate}
+    \item None.
+    \item Axis 1.
+    \item Axes 1 and 2.
+    \item Ax2s 1, 2 and 3.
+    \item All RDA axes.
+\end{enumerate}
+One statement is correct.
+  }
+  
+\item[1\_9]{ Perform a permutational significance test of the predictor variables (use a marginal test (\texttt{by = 'margin'})).
+  Which predictor explains most of the variation in the data?
+  \begin{enumerate}
+      \item None.
+      \item log\_Cond
+      \item log\_maxTU 
+      \item PC1
+      \item PC2
+  \end{enumerate}
+One statement is correct.
+  }
+\end{description}
+
+
+
+%' \section{Part II - Unconstrained ordination and multivariate ANOVA}
+%' In this exercise we will use benthic community data around offshore installations. The data was retrieved from the UK Benthos Database, Oil \& Gas UK, \url{http://www.oilandgasuk.co.uk/knowledgecentre/uk_benthos_database.cfm}.
+%' 
+%' Benthic communities were sampled at sites with varying distances from an oil platform along transects. You will find the community data in the files folder (\texttt{oil\_abu.csv}).
+%' Moreover, several environmental parameters have been measured at the sampling sites, this data is stored in \texttt{oil\_env.csv}. 
+%' However for this exercise we only need the \texttt{distance} column of the table.
+%' 
+%' We are interested if communities near the oil platform differ from communities apart.
+%' 
+%' 
+%' \subsection{Tasks}
+%' <<echo = FALSE, message=FALSE>>=
+%' setwd('/home/edisz/Documents/Uni/Courses/WS1415/Multivariate_Statistics/Exercises/Exercise_4/data/')
+%' require(vegan)
+%' oil_abu <- read.table('oil_abu.csv', header = TRUE, sep = ';')
+%' oil_env <- read.table('oil_env.csv', header = TRUE, sep =';')
+%' @
+%' 
+%' \begin{description}
+%'   \item[q2\_1]{Read both data files (abudata and envdata) into R and name them according to their file name!
+%'     <<eval=FALSE>>=
+%' oil_abu <- <codehere>
+%' oil_env <- <codehere>
+%' @
+%'   }
+%'   
+%'   \item[q2\_2]{Group the sampling sites into three distance classes (0-250m, 251-750m, >750m). Use the variable \emph{distance} in the oil\_env table and the \texttt{cut()} function to classify the distance classes.
+%'   
+%' <<eval=FALSE>>=
+%' q2_2 <- cut(<yourcodehere>)
+%' @
+%' <<echo=FALSE>>=
+%' q2_2 <- cut(oil_env$distance, c(0, 250, 750, max(oil_env$distance)))
+%' @
+%'   }
+%'   
+%'   \item[q2\_3]{
+%'   The abundance data (\texttt{oil\_abu}) consists of counts. What distance measure may be appropriate for this kind of data?
+%'   \begin{enumerate}
+%'       \item Euclidean distance.
+%'       \item Hamming distance.
+%'        \item Bray-Curtis distance.
+%'       \item Levenshtein distance.
+%'   \end{enumerate}
+%' One statement is correct.
+%' <<eval = FALSE>>=
+%' q2_3 <- <1 or 2 or 3 or 4>
+%' @
+%'   }
+%'   
+%'   \item[q2\_4]{
+%'   Run a NMDS (with 2 dimensions) on the community data using an appropriate distance measure.
+%'   Note, o make your results reproducible you should run the \texttt{set.seed(1234)} command before every run of metaMDS()!
+%' <<eval=FALSE>>=
+%' set.seed(1234)
+%' q2_4 <- metaMDS(<yourcodehere>, k = 2)
+%' @
+%' <<echo=FALSE, results='hide'>>=
+%' set.seed(1234)
+%' q2_4 <- metaMDS(oil_abu, distance = 'bray')
+%' @
+%' 
+%'   }
+%'   
+%'   \item[q2\_5 \textbf{(optional - will not be evaluated!)}]{
+%'   Plot the results of the NMDS. Display only sites and use different colors for the distance classes.
+%'   }
+%'   
+%'   \item[q2\_6]{Figure 2 shows the NMDS of the benthic abundance data.
+%' <<q2_6, echo=FALSE,fig.show='hold', out.width='9cm', fig.align='center', fig.cap='NMDS of benthic data.', message=FALSE, fig.pos='H'>>=
+%' sc <- scores(q2_4)
+%' cols <- c('red', 'blue', 'green')
+%' plot(q2_4, display = 'sites', type = 'n')
+%' ordihull(sc, q2_2)
+%' ordispider(sc, q2_2, lty = 'dotted')
+%' points(sc, col = cols[q2_2], pch = 16, cex = 1.4)
+%' legend('topright', legend = levels(q2_2), col = cols, pch = 16)
+%' @
+%' Interpreting only this plot - are the communities near the oil platform different from those further apart? (yes = TRUE, no = FALSE)
+%' <<eval=FALSE>>=
+%' q2_6 <- <TRUE or FALSE>
+%' @
+%'   }
+%'   
+%'   \item[q2\_7]{Figure 2 shows the NMDS of the benthic abundance data.
+%' Interpreting only this plot - are the dispersions equal between the different distance classes? (yes = TRUE, no = FALSE)
+%' <<eval=FALSE>>=
+%' q2_7 <- <TRUE or FALSE>
+%' @
+%'   }
+%'   
+%'   \item[q2\_8]{Perform a distance-based test for homogeneity of dispersion \cite{anderson_distance_2006} using \texttt{betadisper}.
+%' <<echo =FALSE, results='hide'>>=
+%' bd <- betadisper(vegdist(oil_abu), q2_2)
+%' anova(bd)
+%' @
+%' Is there a statistically significant difference in dispersions between distance classes? (yes = TRUE, no = FALSE)
+%' <<eval=FALSE>>=
+%' q2_8 <- <TRUE or FALSE>
+%' @
+%'   }
+%'   
+%'   \item[q2\_9]{Perform a PERMANOVA to test whether communities near the oil platform differ from communities further apart.
+%'  <<echo =FALSE, results='hide'>>=
+%' ad <- adonis(vegdist(oil_abu) ~ q2_2)
+%' ad
+%' @ 
+%'   How much of the variance in the community data could be explained by the distance class?
+%'   Give your answer in \%, rounding to integer (0.3916 = 39\%), e.g.
+%'   <<eval=FALSE>>=
+%' q2_9 <- 39
+%' @
+%'   }
+%'   
+%'   \item[q2\_10]{ The PERMOVA shows that there is statistically significant difference between different distance classes. However, can we trust these results? (=Are the assumption of PERMANOVA met?) (yes = TRUE, no = FALSE)
+%' <<eval=FALSE>>=
+%' q2_10 <- <TRUE or FALSE>
+%' @
+%' 
+%'   }
+%' \end{description}
+%' 
+%' 
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
