@@ -10,3 +10,5 @@ This repository contains only file for the PERMANOVA - lecture, for other materi
 * `~/data` : Folder containing data used
 * `~/scripts` : Folder containing R scripts used
 * `~/slides` : Folder containing the source code for the files
+* `~/video` : screencast of the lecture
+* `~/exercises`  : Few exercises from last year.

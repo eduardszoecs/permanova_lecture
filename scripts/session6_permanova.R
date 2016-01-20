@@ -15,6 +15,7 @@ str(werra_sp)
 str(werra_env)
 
 
+
 ### ------------ Distance matrix ----------------------------------------------
 ### Compute distance matrix using Bray-Curtis on double-root transformed abundances
 range(werra_sp)
@@ -23,17 +24,19 @@ range(werra_sp^0.25)
 
 # We use a double root transformation
 dist_werra <- vegdist(werra_sp^0.25, method = 'bray')
+dist_werra
 
 
 
 ### ------------ NMDS ----------------------------------------------------------
 ### Run NMDS
 nmds <- metaMDS(dist_werra)
+plot(nmds, type = 'text')
 ### Plot NMDS
 op <- ordiplot(nmds, type = 'n')
 
 # points
-cols = c('red', 'green')
+cols = c('darkred', 'green')
 points(nmds, cex = 2, pch = 16, col = cols[werra_env$position])
 
 # decoration
@@ -62,7 +65,7 @@ densityplot(permustats(pmv))
 # graphically we would say that upstream has lower spread then downstream
 
 
-### ------------ Distance based dispersion test -------------------------------
+### ------------ Distance based dispersion test --------------------------------
 bd <- betadisper(dist_werra, werra_env$position)
 bd
 # also a eigenvalue based method
