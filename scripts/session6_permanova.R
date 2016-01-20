@@ -6,11 +6,13 @@ require(vegan)
 werra_sp <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_sp.csv', 
                        sep = ',', header = TRUE, row.names = 1)
 werra_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_env.csv', 
-                        sep = ',')
+                        sep = ',', header = TRUE)
 
 #! Note: If this does not work (probably because of https...), open the urls in your browser,
 #! download them ('Save page as') and read in the downloaded csv
 
+str(werra_sp)
+str(werra_env)
 
 
 ### ------------ Distance matrix ----------------------------------------------
@@ -18,6 +20,7 @@ werra_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lectu
 range(werra_sp)
 range(werra_sp^0.5)
 range(werra_sp^0.25)
+
 # We use a double root transformation
 dist_werra <- vegdist(werra_sp^0.25, method = 'bray')
 
@@ -114,7 +117,9 @@ summary(sim)
 oil_abu <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/oil_abu.csv', 
                       sep = ',', header = TRUE)
 oil_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/oil_env.csv', 
-                      sep = ',')
+                      sep = ',', header = TRUE)
+# remove not needed variables from oil_env
+oil_env <- oil_env[ , c('distance', 'site')]
 
 
 # Task 2 - Group the sampling sites into three distance classes (0-250m, 251-750m, >750m). 
