@@ -1,10 +1,15 @@
 ### ------------ Load data and package -----------------------------------------
 ### Load data and package
 require(vegan)
-datadir <- "http://edild.github.io/multistat/"
-werra_sp <- read.table(file.path(datadir, 'werra_sp.csv'), sep = ';', 
+
+# This downloads the data files directly from the web
+werra_sp <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_sp.csv', sep = ';', 
                        header = TRUE, row.names = 1)
-werra_env <- read.table(file.path(datadir, 'werra_env.csv'), sep = ';')
+werra_env <- read.table('https://raw.githubusercontent.com/EDiLD/permanova_lecture/master/data/werra_env.csv', sep = ';')
+
+#! Note: If this does not work (probably because of https...), open the urls in your browser,
+#! download them ('Save page as') and read in the downloaded csv
+
 
 
 ### ------------ Distance matrix ----------------------------------------------
@@ -34,6 +39,8 @@ legend("bottomleft", pch = 16, col = cols, legend = levels(werra_env$position))
 # upstream and downstream communities are well separated (indicates an effect!)
 # spread may be different (lower for upstream section)
 
+
+
 ### ------------ PERMANOVA -----------------------------------------------------
 pmv <- adonis(werra_sp^0.25 ~ position, data = werra_env, 
               permutations = 999, 
@@ -43,23 +50,15 @@ pmv
 # the position explains 30.7% of variance
 
 # plot permuted F-values
-plot(density(pmv))
+densityplot(permustats(pmv))
 
 ## But are the assumptions met?
 # check assumptions visually
-nmds <- metaMDS(dist_werra)
-op <- ordiplot(nmds, type = 'n')
-# points
-cols = c('red', 'green')
-points(nmds, cex = 2, pch = 16, col = cols[werra_env$position])
-# decoration
-ordispider(nmds, groups = werra_env$position, label = TRUE)
-ordihull(nmds, groups = werra_env$position, lty = 'dotted')
-legend("bottomleft", pch = 16, col = cols, legend = levels(werra_env$position))
+# on previouse plot
 # graphically we would say that upstream has lower spread then downstream
 
 
-### ------------ Distaance based dispersion test -------------------------------
+### ------------ Distance based dispersion test -------------------------------
 bd <- betadisper(dist_werra, werra_env$position)
 bd
 # also a eigenvalue based method
@@ -79,7 +78,7 @@ permutest(bd)
 
 
 ### ------------ SIMPER --------------------------------------------------------
-sim <- simper(werra_sp^0.25, group=werra_env$position)
+sim <- simper(werra_sp^0.25, group = werra_env$position)
 sim
 summary(sim)
 # contr :   contribution to dissimilarity between upstream and downstream
@@ -92,3 +91,7 @@ summary(sim)
 # Lype sp. decreases (from 6.29 to 2.49) and has the highest contribution
 # Lasiocephala.basalis increases (from 3.24 to 7.09)
 # Gammarus sp. descreases to zero (from 2.78 to 0) and also shows this consitently (high contribution to sd ratio)
+
+
+
+
