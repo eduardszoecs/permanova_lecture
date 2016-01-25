@@ -1,0 +1,352 @@
+\pdfminorversion 4
+%% otherwise pdftk does not run properly...
+\documentclass[10pt]{beamer}
+\usetheme{PaloAlto}
+\usecolortheme{beaver}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}  
+\usepackage[scaled=1]{helvet} 
+\usepackage{fancyvrb}
+\usepackage{fixltx2e}
+\usepackage{amsmath}
+\usepackage[export]{adjustbox}
+\graphicspath{{pics/}}                  % path to graphics
+\beamertemplatenavigationsymbolsempty
+
+\setbeamercovered{transparent}% Allow for shaded (transparent) covered items
+
+
+
+%% Custumizations of theme
+% Bold font in titles
+\setbeamerfont{frametitle}{series=\bfseries} 
+\setbeamerfont{block title}{series=\bfseries}
+
+\setbeamercolor{section in sidebar}{fg=black}
+\setbeamercolor{title in sidebar}{fg=black}
+
+\setbeamertemplate{itemize items}[default]
+\setbeamercolor*{item}{fg=darkred} % all frames will have red bullets
+
+\renewcommand{\footnotesize}{\scriptsize}
+
+
+% customize color code chunk (Scode = inline)
+\definecolor{Sinput}{rgb}{0.75,0.19,0.19}
+\definecolor{Soutput}{rgb}{0,0,0}
+\definecolor{Scode}{rgb}{0.75,0.19,0.19}
+
+%overlay pics
+\def\Put(#1,#2)#3{\leavevmode\makebox(0,0){\put(#1,#2){#3}}}
+
+
+\title{Analysing Mesocosm Experiments - Principal Response Curves}
+\author{Eduard Szöcs}
+\institute{Institute for Environmental Sciences - University Koblenz-Landau}
+\date{\today}
+\logo{\includegraphics[width = 1.5cm]{pics/logo.pdf}}  
+
+
+
+
+
+\begin{document}
+% default size for the sweaved graphics
+%\setkeys{Gin}{width=1\textwidth}
+% default font size and color for R code
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{formatcom = {\color{Sinput}},fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{formatcom = {\color{Soutput}},fontsize=\footnotesize}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{formatcom = {\color{Scode}},fontsize=\small}
+
+%%% Setup structure and load data and pacakges
+<<setup, results='hide', echo=FALSE>>=
+options(width=60)
+opts_chunk$set(fig.path='figs/',
+               fig.align='center',
+               fig.show='hold',
+               size='footnotesize', 
+               cache=TRUE)
+@
+
+
+<<load, results='hide',echo=FALSE, message=FALSE>>=
+# packages 
+require(vegan)
+
+data(pyrifos)
+ditch <- gl(12, 1, length = 132)
+week <- gl(11, 12, labels = c(-4, -1, 0.1, 1, 2, 4, 8, 12,
+15, 19, 24))
+dose <- factor(rep(c(0.1, 0, 0, 0.9, 0, 44, 6, 0.1, 44,
+0.9, 0, 6), 11))
+pyrifos_env <- data.frame(ditch, week, dose)
+@
+
+%%% Begin slides
+%% Title Page
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\section{Introduction}
+\subsection{Mesocosms}
+\begin{frame}
+  \frametitle{Mesocosm studies}
+  \begin{columns}
+    \begin{column}{5cm}
+      \begin{itemize}
+        \item Between laboratory and field studies (relevance and control)
+        \item Higher Tier Tests in ecological risk assessment
+        \item Effects on community structure and functioning 
+      \end{itemize}
+    \end{column}
+    \begin{column}{5cm}
+    \includegraphics[height=0.4\textheight]{pics/lakelab.jpg}\\ 
+    \footnotesize
+    IGB, LakeLab, Lake Stechlin, Brandenburg
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\subsection{Data}
+\begin{frame}
+\frametitle{Mesocosm data}
+General experimental setup:
+  \begin{itemize}
+    \item Mesocosms treated with test item
+    \item Communities sampled before and after exposure
+    \item Multiple timepoints (recovery?)
+  \end{itemize}
+  \pause
+This yields:
+  \begin{itemize}
+    \item large and complex data sets 
+    \item multiple species 
+    \item many time points
+  \end{itemize}
+  
+  \pause
+  \textbf{Multivariate techniques} are needed:
+  \begin{itemize}
+    \item analyse
+    \item summarise
+    \item interpret 
+  \end{itemize}
+\end{frame}
+
+\section{Analysis}
+\begin{frame}
+\frametitle{Principal Response Curves}
+\includegraphics[width = \textwidth]{pics/prc_paper.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{Results}
+  \includegraphics[width = 0.99\textwidth, frame]{pics/prc1.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{RDA?}
+  \begin{columns}
+    \begin{column}{5cm}
+    \textbf{RDA}: 
+    \begin{itemize}
+      \item treatment, time , treatment x time
+      \item cluttered biplot
+      \item can spot effects, but not obvious
+      \item effect of time?
+    \end{itemize}
+    \end{column}
+    \begin{column}{5cm}
+<<rda1, echo = FALSE>>=
+mod_rda <- rda(pyrifos ~ dose*week)
+
+plot(mod_rda, disp = c('sp', 'si'),type = 'n', main = 'RDA', cex.lab = 2)
+points(mod_rda, disp = 'sites', col = dose, pch = 16, cex = 1.75)
+for(i in unique(ditch)){
+  sc <- scores(mod_rda, disp = 'si')
+  lines(sc[ditch == i ,1], sc[ ditch == i,2], 
+        col = dose[ditch == i], lwd = 1, lty = 'dotted')
+}
+spec_plot <- scores(mod_rda, display='sp', choices=1:2)
+specs <- spec_plot[abs(spec_plot[,1]) > 0.5 | abs(spec_plot[,2]) > 0.5, ]
+text(specs, cex = 0.7, col = 'black', label = rownames(specs))
+legend('bottomleft', legend=levels(dose), col = 1:5, pch = 16)
+@
+    \end{column}
+  \end{columns}
+  \pause
+  Need a better way to represent the treatment effects!
+\end{frame}
+
+\begin{frame}
+\frametitle{partial RDA?}
+  \begin{columns}
+    \begin{column}{5cm}
+    \textbf{partial RDA}: 
+    \begin{itemize}
+    \visible<1->{
+      \item Not interested in the pure time effect
+      \item remove time effect (\emph{partial out})
+    }
+    \visible<2->{
+      \item treatment + treatment x time on first axis
+      \item first axis better separates treatments
+      \item still cluttered
+      \item time course?
+    }
+    \end{itemize}
+    \end{column}
+    \begin{column}{5cm}
+    \visible<2->{
+<<prda1, echo = FALSE>>=
+mod_prda <- rda(pyrifos ~ dose*week + Condition(week))
+
+plot(mod_prda, disp = c('sp', 'si'),type = 'n', main = 'partial RDA')
+points(mod_prda, disp = 'sites', col = dose, pch = 16, cex = 1.75)
+for(i in unique(ditch)){
+  sc <- scores(mod_prda, disp = 'si')
+  lines(sc[ditch == i ,1], sc[ ditch == i,2], 
+        col = dose[ditch == i], lwd = 1, lty = 'dotted')
+}
+spec_plot <- scores(mod_prda, display='sp', choices=1:2)
+specs <- spec_plot[abs(spec_plot[,1]) > 0.5 | abs(spec_plot[,2]) > 0.5, ]
+text(specs, cex = 0.7, col = 'black', label = rownames(specs))
+legend('bottomleft', legend=levels(dose), col = 1:5, pch = 16)
+@
+}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{PRC!}
+  \begin{columns}
+    \begin{column}{5cm}
+    \textbf{PRC}: 
+    \begin{itemize}
+      \item \textbf{1st axis}
+      \item site scores as contrast to control
+      \item species scores
+      \item easy plot
+      \item easy to interpret
+    \end{itemize}
+    \end{column}
+    \begin{column}{5cm}
+<<prc11, echo = FALSE>>=
+mod_prc <- prc(pyrifos, treatment=dose, week)
+sum_mod_prc <- summary(mod_prc)
+
+plot(mod_prc, select = abs(sum_mod_prc$sp ) > 0.5, col = 2:5, lwd = 5)
+@
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Summary}
+\includegraphics[width=\textwidth, height=\textheight]{pics/prc_intro.pdf}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Numerical output}
+\begin{itemize}
+  \item How much variation is displayed on first axis?
+  \pause
+  \item Significance testing:
+  \begin{itemize}
+    \item of first axis
+    \item of predictors (treatment x time)
+    \item need to take repeated measures into account
+  \end{itemize}
+  \pause
+  \item Recovery?
+  \begin{itemize}
+    \item separate RDA per time point
+  \end{itemize}
+  \pause
+  \item NOEC?
+  \begin{itemize}
+    \item poorly replicated
+    \item cannot use permutations
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\section{Interpretation}
+\begin{frame}
+\frametitle{Interpretation}
+  \begin{columns}
+    \begin{column}{5cm}
+    \textbf{Site scores}: 
+    \begin{itemize}
+      \item Date on \textbf{x-axis}
+      \item deviations in composition between treatments and control on the \textbf{y-axis}
+      \item spot recovery (treatment x time)
+    \end{itemize}
+    \pause
+    \textbf{Species scores}
+    \begin{itemize}
+      \item species responsible for the pattern
+      \item increase / decrease
+    \end{itemize}
+    \end{column}
+    \begin{column}{5cm}
+<<prc12, echo = FALSE>>=
+mod_prc <- prc(pyrifos, treatment=dose, week)
+sum_mod_prc <- summary(mod_prc)
+
+plot(mod_prc, select = abs(sum_mod_prc$sp ) > 0.5, col = 2:5, lwd = 5)
+@
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Caveats}
+  \begin{itemize}
+    \item low species scores not necessarily mean low response!
+    \begin{itemize}
+      \item species associated with main pattern
+      \item special responses (no recovery)
+    \end{itemize}
+    \pause
+    \item Need to transform abundance data (often ln(Ax + 1))
+  \end{itemize}
+\end{frame}
+
+
+\section{Alternatives}
+\begin{frame}
+\frametitle{Alternatives}
+  \begin{itemize}
+    \item (multivariate) GLM (Warton 2012)
+    \begin{itemize}
+      \item new method, can model counts
+      \item advantages, but also some disadvantages (e.g. computation time, complexity)
+    \end{itemize}
+    \pause
+    \item Univariate indicators?
+    \begin{itemize}
+      \item SPEAR, diversity, ...
+      \item univariate solution to a multivariate problem
+      \item what about species responses?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+
+\section{How to}
+\begin{frame}
+\frametitle{Lets do it in R!}
+\includegraphics[width=\textwidth]{pics/user.png}
+
+\end{frame}
+
+\end{document}
